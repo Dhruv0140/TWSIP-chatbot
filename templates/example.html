@@ -1,0 +1,266 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Interface</title>
+</head>
+<body>
+    <h1>Chatbot Interface</h1>
+    <form action="/process" method="post">
+        <label for="user_input">Enter your message:</label>
+        <input type="text" id="user_input" name="user_input">
+        <button type="submit">Submit</button>
+    </form>
+    {% if user_input %}
+    <h2>Input: {{ user_input }}</h2>
+    <h2>Response: {{ response }}</h2>
+    {% endif %}
+</body>
+</html>
+
+
+
+import csv
+import requests
+from flask import Flask, render_template, request
+from googlesearch import search
+
+class Chatbot:
+    def __init__(self, csv_file):
+        self.questions = []
+        self.answers = []
+        try:
+            with open(csv_file, "r", encoding='utf-8') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if len(row) >= 2:  # Ensure there are at least two columns
+                        self.questions.append(row[0].strip().lower())  # Convert questions to lowercase
+                        self.answers.append(row[1].strip())
+        except FileNotFoundError:
+            print(f"Error: The file {csv_file} was not found.")
+        except Exception as e:
+            print(f"Error reading {csv_file}: {e}")
+
+    def answer_question(self, question):
+        question = question.lower().strip()
+        for i, csv_question in enumerate(self.questions):
+            csv_words = set(csv_question.split())
+            user_words = set(question.split())
+            if csv_words & user_words:  # Check if there's any common word
+                return self.answers[i]
+        return None
+
+def google_search(query, num_results=1):
+    try:
+        search_results = list(search(query, stop=num_results))
+        return search_results
+    except Exception as e:
+        print(f"An error occurred during Google search: {e}")
+        return []
+
+def get_google_search_result(query):
+    search_results = google_search(query, num_results=1)
+    if search_results:
+        return search_results[0]  # Return the first search result URL
+    else:
+        return "I couldn't find any relevant information for your query."
+
+def chatbot_response(chatbot, user_input):
+    if user_input.lower() == 'exit':
+        return "Goodbye!"
+    else:
+        csv_response = chatbot.answer_question(user_input)
+        if csv_response:
+            return csv_response
+        else:
+            response = get_google_search_result(user_input)
+            return response
+
+app = Flask(__name__)
+
+chatbot = Chatbot("chat_bot.csv")
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/process', methods=['POST'])
+def process():
+    user_input = request.form['user_input']
+    response = chatbot_response(chatbot, user_input)
+    return render_template('index.html', user_input=user_input, response=response)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chatbot Interface</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f0f0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+            .chat-container {
+                background: white;
+                width: 360px;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                overflow: hidden;
+                height: 80vh;
+            }
+            .chat-box {
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                overflow-y: auto;
+                height: calc(100% - 60px);
+            }
+            .chat-input {
+                display: flex;
+                padding: 10px;
+                border-top: 1px solid #ddd;
+                align-items: center;
+            }
+            .chat-input input {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                margin-right: 10px;
+            }
+            .chat-input button {
+                padding: 10px 20px;
+                border: none;
+                background-color: #007bff;
+                color: white;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .chat-message {
+                display: flex;
+                justify-content: flex-start;
+                padding: 10px;
+                background-color: #f0f0f0;
+                border-radius: 10px;
+                width: fit-content;
+                max-width: 70%;
+            }
+            .chat-message.user {
+                justify-content: flex-end;
+                background-color: #007bff;
+                color: white;
+                align-self: flex-end;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="chat-container">
+            <div class="chat-box" id="chat-box">
+                {% if user_input and response %}
+                    <div class="chat-message user">
+                        {{ user_input }}
+                    </div>
+                    <div class="chat-message">
+                        {{ response }}
+                    </div>
+                {% endif %}
+            </div>
+            <form class="chat-input" action="/process" method="post">
+                <input type="text" id="user_input" name="user_input" placeholder="Type a message...">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </body>
+    </html>
+
+    
+
+
+    import csv
+from flask import Flask, render_template, request
+from googlesearch import search
+
+class Chatbot:
+    def __init__(self, csv_file):
+        self.questions = []
+        self.answers = []
+        try:
+            with open(csv_file, "r", encoding='utf-8') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if len(row) >= 2:  # Ensure there are at least two columns
+                        self.questions.append(row[0].strip().lower())  # Convert questions to lowercase
+                        self.answers.append(row[1].strip())
+        except FileNotFoundError:
+            print(f"Error: The file {csv_file} was not found.")
+        except Exception as e:
+            print(f"Error reading {csv_file}: {e}")
+
+    def answer_question(self, question):
+        question = question.lower().strip()
+        for i, csv_question in enumerate(self.questions):
+            csv_words = set(csv_question.split())
+            user_words = set(question.split())
+            if csv_words & user_words:  # Check if there's any common word
+                return self.answers[i]
+        return None
+
+def google_search(query, num_results=1):
+    try:
+        search_results = list(search(query, stop=num_results))
+        return search_results
+    except Exception as e:
+        print(f"An error occurred during Google search: {e}")
+        return []
+
+def get_google_search_result(query):
+    search_results = google_search(query, num_results=1)
+    if search_results:
+        return search_results[0]  # Return the first search result URL
+    else:
+        return "I couldn't find any relevant information for your query."
+
+def chatbot_response(chatbot, user_input):
+    if user_input.lower() == 'exit':
+        return "Goodbye!"
+    else:
+        csv_response = chatbot.answer_question(user_input)
+        if csv_response:
+            return csv_response
+        else:
+            response = get_google_search_result(user_input)
+            return response
+
+app = Flask(__name__)
+
+chatbot = Chatbot("chat_bot.csv")
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/process', methods=['POST'])
+def process():
+    user_input = request.form['user_input']
+    response = chatbot_response(chatbot, user_input)
+    return render_template('index.html', user_input=user_input, response=response)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+     -->

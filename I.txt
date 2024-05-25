@@ -1,0 +1,12 @@
+Import the necessary libraries: re, csv, googlesearch, and random.
+Define a class called Chatbot with a constructor that takes a CSV file as input. This file contains a list of questions and their corresponding answers.
+Define a method called answer_question() in the Chatbot class. This method takes a question as input and returns the closest matching answer from the CSV file. The Levenshtein distance algorithm is used to calculate the similarity between the two strings.
+Define a function called levenshtein_distance(). This function calculates the Levenshtein distance between two strings.
+Define a function called google_search(). This function takes a query as input and returns a list of search results from Google.
+Define a function called get_google_search_result(). This function takes a query as input and returns the first search result URL.
+Define a function called chatbot_response(). This function takes a user input as input and returns a response. The response can be a link, a Google search result, or an answer from the chatbot.
+Define a function called is_link(). This function takes a string as input and returns True if the string is a link, False otherwise.
+Initialize a Chatbot object with the CSV file containing the questions and answers.
+Print a welcome message and prompt the user to enter a question or command.
+While the user input is not exit, call the chatbot_response() function with the user input and print the response.
+Print a goodbye message when the user input is exit.
